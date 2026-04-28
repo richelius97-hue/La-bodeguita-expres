@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>La Bodega Express — E-commerce Premium</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, 'Inter', 'Segoe UI', Roboto, Helvetica, sans-serif;
+      background-color: #FFFFFF;
+      color: #1A1A1A;
+      line-height: 1.4;
+      scroll-behavior: smooth;
+    }
+
+    /* Contenedor principal */
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 1.5rem;
+    }
+
+    /* Header premium */
+    .header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: baseline;
+      border-bottom: 1px solid #EEEEEE;
+      padding-bottom: 1.25rem;
+      margin-bottom: 2rem;
+    }
+
+    .logo h1 {
+      font-size: 1.8rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #1A1A1A 0%, #B91C1C 100%);
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+    }
+
+    .logo p {
+      font-size: 0.8rem;
+      color: #6B7280;
+      letter-spacing: 0.3px;
+    }
+
+    /* Botón carrito (icono) */
+    .cart-icon {
+      position: relative;
+      cursor: pointer;
+      background: #F9F9F9;
+      padding: 0.6rem 1rem;
+      border-radius: 40px;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 500;
+      border: 1px solid #EFEFEF;
+    }
+
+    .cart-icon:hover {
+      background: #B91C1C;
+      color: white;
+      border-color: #B91C1C;
+    }
+
+    .cart-count {
+      background: #B91C1C;
+      color: white;
+      border-radius: 30px;
+      padding: 0.2rem 0.6rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    /* Navegación categorías */
+    .categories {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+      border-bottom: 1px solid #F0F0F0;
+      padding-bottom: 1rem;
+      overflow-x: auto;
+    }
+
+    .cat-btn {
+      background: none;
+      border: none;
+      padding: 0.5rem 1.2rem;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      border-radius: 40px;
+      transition: all 0.2s;
+      color: #4B5563;
+    }
+
+    .cat-btn.active {
+      background: #B91C1C;
+      color: white;
+    }
+
+    .cat-btn:hover:not(.active) {
+      background: #F3F4F6;
+    }
+
+    /* Grid productos: mobile 2 columnas, tablet 3, desktop 4 (excepto vista "todos" que forzamos 2 cols?) */
+    /* La spec dice "Sección Todos: 2 columnas, 25 productos por columna" → lo aplicamos solo cuando categoría = 'todos' */
+    .products-grid {
+      display: grid;
+      gap: 1.5rem;
+    }
+
+    /* Modo normal (cualquier categoría) -> responsive 2/3/4 */
+    .products-grid:not(.todos-mode) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    /* Modo especial "todos" con exactamente 2 columnas en todos los breakpoints */
+    .products-grid.todos-mode {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    /* Tarjeta producto */
+    .product-card {
+      background: white;
+      border-radius: 1.25rem;
+      overflow: hidden;
+      transition: transform 0.2s ease, box-shadow 0.2s;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+      border: 1px solid #F0F0F0;
+    }
+
+    .product-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 25px -12px rgba(0, 0, 0, 0.08);
+      border-color: #E5E7EB;
+    }
+
+    .product-img {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      object-fit: cover;
+      background: #F9FAFB;
+      display: block;
+    }
+
+    .product-info {
+      padding: 1rem;
+    }
+
+    .product-name {
+      font-weight: 600;
+      font-size: 1rem;
+      margin-bottom: 0.4rem;
+    }
+
+    .product-price {
+      font-weight: 700;
+      color: #B91C1C;
+      font-size: 1.1rem;
+      margin-bottom: 0.8rem;
+    }
+
+    .add-btn {
+      background: #1A1A1A;
+      color: white;
+      border: none;
+      width: 100%;
+      padding: 0.7rem;
+      border-radius: 2rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .add-btn:hover {
+      background: #B91C1C;
+    }
+
+    /* Sidebar carrito (offcanvas) */
+    .cart-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(4px);
+      visibility: hidden;
+      opacity: 0;
+      transition: 0.2s;
+      z-index: 1000;
+    }
+
+    .cart-sidebar {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 90%;
+      max-width: 420px;
+      height: 100%;
+      background: white;
+      box-shadow: -5px 0 25px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+      transform: translateX(100%);
+      transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+      z-index: 1001;
+    }
+
+    .cart-overlay.open {
+      visibility: visible;
+      opacity: 1;
+    }
+
+    .cart-sidebar.open {
+      transform: translateX(0);
+    }
+
+    .cart-header {
+      padding: 1.5rem;
+      border-bottom: 1px solid #EFEFEF;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .cart-header h2 {
+      font-size: 1.4rem;
+      font-weight: 600;
+    }
+
+    .close-cart {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+
+    .cart-items {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1rem;
+    }
+
+    .cart-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.8rem 0;
+      border-bottom: 1px solid #F3F4F6;
+    }
+
+    .cart-item-info {
+      flex: 1;
+    }
+
+    .cart-item-name {
+      font-weight: 500;
+    }
+
+    .cart-item-price {
+      font-size: 0.85rem;
+      color: #B91C1C;
+    }
+
+    .cart-item-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+    }
+
+    .cart-qty {
+      font-weight: 600;
+      min-width: 24px;
+      text-align: center;
+    }
+
+    .remove-item {
+      background: #FEE2E2;
+      border: none;
+      padding: 0.2rem 0.6rem;
+      border-radius: 30px;
+      color: #991B1B;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .cart-total {
+      padding: 1.2rem;
+      border-top: 2px solid #EEEEEE;
+      font-weight: 700;
+      font-size: 1.2rem;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .whatsapp-btn {
+      background: #25D366;
+      color: white;
+      border: none;
+      margin: 1rem;
+      padding: 1rem;
+      border-radius: 50px;
+      font-weight: bold;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .whatsapp-btn:hover {
+      background: #128C7E;
+    }
+
+    footer {
+      margin-top: 3rem;
+      text-align: center;
+      padding: 2rem 0;
+      color: #9CA3AF;
+      border-top: 1px solid #F0F0F0;
+    }
+
+    @media (min-width: 768px) {
+      .products-grid:not(.todos-mode) {
+        grid-template-columns: repeat(3, 1fr);
+      }
+      .container {
+        padding: 2rem;
+      }
+    }
+
+    @media (min-width: 1024px) {
+      .products-grid:not(.todos-mode) {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <div class="logo">
+      <h1>La Bodega Express</h1>
+      <p>productos seleccionados · calidad premium</p>
+    </div>
+    <div class="cart-icon" id="cartIcon">
+      <span>🛒</span>
+      <span class="cart-count" id="cartCount">0</span>
+    </div>
+  </div>
+
+  <!-- Filtros categorías -->
+  <div class="categories" id="categoriesContainer">
+    <button class="cat-btn active" data-category="todos">Todos</button>
+    <button class="cat-btn" data-category="confituras">Confituras</button>
+    <button class="cat-btn" data-category="cárnicos">Cárnicos</button>
+    <button class="cat-btn" data-category="embutidos">Embutidos</button>
+    <button class="cat-btn" data-category="pastas">Pastas</button>
+    <button class="cat-btn" data-category="otros">Otros</button>
+  </div>
+
+  <!-- Grid productos -->
+  <div id="productsGrid" class="products-grid"></div>
+  <footer>✨ Calidad artesanal ·</footer>
+</div>
+
+<!-- Carrito Sidebar -->
+<div id="cartOverlay" class="cart-overlay">
+  <div id="cartSidebar" class="cart-sidebar">
+    <div class="cart-header">
+      <h2>Tu pedido</h2>
+      <button class="close-cart" id="closeCartBtn">✕</button>
+    </div>
+    <div id="cartItemsList" class="cart-items">
+      <p style="text-align:center; color:#aaa;">Carrito vacío</p>
+    </div>
+    <div id="cartTotal" class="cart-total">Total: $0.00</div>
+    <button id="whatsappOrderBtn" class="whatsapp-btn">📲 Enviar pedido por WhatsApp</button>
+  </div>
+</div>
+
+<script>
+  // ----------------------------- PRODUCTOS (directamente en HTML según spec)
+  const productos = [
+    // Confituras
+    { id: 1, nombre: "chupa chupa 50u", precio: 3.50, categoria: "confituras", imagen: "images/chupa.webp?text=chupa chupa" },
+    { id: 2, nombre: "vacio", precio: 0.00, categoria: "otros", imagen: "images/agotado.webp?text=vacio" },
+    // Cárnicos
+    { id: 3, nombre: "carne de cerdo deshuesada ", precio: 3.05, categoria: "cárnicos", imagen: "images/cerdolomo.webp?text=carne de cerdo" },
+    { id: 4, nombre: "paquete de pollo 2kg", precio: 6.99, categoria: "cárnicos", imagen: "images/pollo.webp?text=pollo" },
+    // Embutidos
+    { id: 5, nombre: "paquete de salchicha de 10u", precio: 1.85, categoria: "embutidos", imagen: "images/salchicha.webp?text=salchicha" },
+    { id: 6, nombre: "picadillo de pollo", precio: 1.35, categoria: "embutidos", imagen: "images/picapollo.webp?text=picadillodepollo" },
+    // Pastas
+    { id: 7, nombre: "paqt de espaguetis", precio: 1.5, categoria: "pastas", imagen:"images/espa.webp?text=espaguetis" },
+    { id: 8, nombre: "paqt de macarrones", precio: 1.5, categoria: "pastas", imagen: "images/maca.webp?text=macarrones" },
+    // Otros
+    { id: 9, nombre: "Aceite", precio: 3.75, categoria: "otros", imagen: "images/aceite.webp?text=aceite" },
+    { id: 10, nombre: "pasta dental", precio: 1.75, categoria: "otros", imagen: "images/dental.jpg?text=pasta dental" },
+    { id: 11, nombre: "arroz importado x libras", precio: 0.99, categoria: "otros", imagen: "images/arroz.webp?text=arroz" },
+    { id: 12, nombre: "pqt de papel sanitario 4u", precio: 1.85, categoria: "otros", imagen: "images/sanitario.webp?text=papel sanitario" },
+    { id: 13, nombre: "jabón de baño", precio: 0.55, categoria: "otros", imagen: "images/jabonb.jpg?text=jabon de baño" },
+    { id: 14, nombre: "pqt de detergente en polvo 500g", precio: 1.45, categoria: "otros", imagen: "images/detergente.webp?text=detergente" },
+    { id: 15, nombre: "panetela", precio: 14.99, categoria: "otros", imagen: "images/panetela.webp?text=panetela" },
+    { id: 16, nombre: "tarta de media bandeja solo ssp", precio: 22.50, categoria: "otros", imagen: "images/tarta.webp?text=tarta" },
+    { id: 17, nombre: " paqt de azúcar blanca", precio: 2.75, categoria: "otros", imagen: "images/azucar.webp?text=azucar" },
+    { id: 18, nombre: " paqt de frijoles negros", precio: 2.25, categoria: "otros", imagen: "images/frijoles.webp?text=frijoles" },
+    { id: 19, nombre: "cartón de huevos", precio: 2.25, categoria: "otros", imagen: "images/huevo.webp?text=huevo" },
+    { id: 20, nombre: "leche en polvo", precio: 3.15, categoria: "otros", imagen: "images/lechepolvo.webp?text=leche en polvo" },
+    { id: 21, nombre: "pasta de tomate 400g", precio: 1.75, categoria: "otros", imagen: "images/pure.webp?text=pure" }
+
+
+
+    
+
+
+
+    
+    
+  ];
+
+  // Estado Global
+  let cart = {};   // { id: { id, nombre, precio, cantidad } }
+  let currentCategory = "todos";
+
+  // DOM Elements
+  const productsGrid = document.getElementById("productsGrid");
+  const cartIcon = document.getElementById("cartIcon");
+  const cartOverlay = document.getElementById("cartOverlay");
+  const cartSidebar = document.getElementById("cartSidebar");
+  const closeCartBtn = document.getElementById("closeCartBtn");
+  const cartItemsList = document.getElementById("cartItemsList");
+  const cartTotalSpan = document.getElementById("cartTotal");
+  const cartCountSpan = document.getElementById("cartCount");
+  const whatsappBtn = document.getElementById("whatsappOrderBtn");
+
+  // Helper: guardar en localStorage
+  function saveCartToLocal() {
+    localStorage.setItem("bodegaCart", JSON.stringify(cart));
+  }
+
+  // Cargar carrito desde localStorage
+  function loadCartFromLocal() {
+    const stored = localStorage.getItem("bodegaCart");
+    if (stored) {
+      try {
+        cart = JSON.parse(stored);
+        // asegurar estructura correcta
+        Object.keys(cart).forEach(key => {
+          if (!cart[key].cantidad) cart[key].cantidad = 1;
+        });
+      } catch(e) { cart = {}; }
+    } else {
+      cart = {};
+    }
+    renderCartUI();
+    renderProductsGrid();  // para refrescar el contador del botón aunque no cambien productos
+  }
+
+  // Añadir producto al carrito (opción A: suma +1 cada vez)
+  function addToCart(producto) {
+    const id = producto.id;
+    if (cart[id]) {
+      cart[id].cantidad += 1;
+    } else {
+      cart[id] = {
+        id: producto.id,
+        nombre: producto.nombre,
+        precio: producto.precio,
+        cantidad: 1
+      };
+    }
+    saveCartToLocal();
+    renderCartUI();
+    renderProductsGrid(); // Actualiza posibles "agregado visual" (cambia count)
+  }
+
+  // Eliminar producto completo o decrementar? Según spec: eliminar productos del carrito
+  // Usaremos eliminar item completo (botón eliminar)
+  function removeItemFromCart(productId) {
+    if (cart[productId]) {
+      delete cart[productId];
+      saveCartToLocal();
+      renderCartUI();
+      renderProductsGrid();
+    }
+  }
+
+  // Actualizar cantidad individual (para sumar/restar dentro del carrito)
+  function updateQuantity(productId, newQty) {
+    if (cart[productId]) {
+      if (newQty <= 0) {
+        delete cart[productId];
+      } else {
+        cart[productId].cantidad = newQty;
+      }
+      saveCartToLocal();
+      renderCartUI();
+      renderProductsGrid();
+    }
+  }
+
+  // Renderizar UI del carrito (lista, total, contador)
+  function renderCartUI() {
+    const itemsArray = Object.values(cart);
+    const total = itemsArray.reduce((sum, item) => sum + (item.precio * item.cantidad), 0);
+    const totalItems = itemsArray.reduce((sum, item) => sum + item.cantidad, 0);
+    cartCountSpan.innerText = totalItems;
+
+    if (itemsArray.length === 0) {
+      cartItemsList.innerHTML = '<p style="text-align:center; color:#aaa;">🛒 Tu carrito está vacío</p>';
+      cartTotalSpan.innerHTML = `Total: $0.00`;
+      return;
+    }
+
+    cartItemsList.innerHTML = itemsArray.map(item => `
+      <div class="cart-item">
+        <div class="cart-item-info">
+          <div class="cart-item-name">${escapeHtml(item.nombre)}</div>
+          <div class="cart-item-price">$${item.precio.toFixed(2)} c/u</div>
+        </div>
+        <div class="cart-item-actions">
+          <button class="remove-item" data-id="${item.id}" data-action="decr">-</button>
+          <span class="cart-qty">${item.cantidad}</span>
+          <button class="remove-item" data-id="${item.id}" data-action="incr">+</button>
+          <button class="remove-item" data-id="${item.id}" data-action="remove" style="background:#e5e7eb;">🗑️</button>
+        </div>
+      </div>
+    `).join("");
+
+    cartTotalSpan.innerHTML = `Total: $${total.toFixed(2)}`;
+
+    // bindeos dinámicos
+    document.querySelectorAll(".remove-item").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        const id = parseInt(btn.dataset.id);
+        const action = btn.dataset.action;
+        if (action === "remove") {
+          removeItemFromCart(id);
+        } else if (action === "incr") {
+          const currentQty = cart[id]?.cantidad || 0;
+          updateQuantity(id, currentQty + 1);
+        } else if (action === "decr") {
+          const currentQty = cart[id]?.cantidad || 0;
+          if (currentQty <= 1) {
+            removeItemFromCart(id);
+          } else {
+            updateQuantity(id, currentQty - 1);
+          }
+        }
+      });
+    });
+  }
+
+  // Generar mensaje WhatsApp
+  function generateWhatsAppMessage() {
+    const items = Object.values(cart);
+    if (items.length === 0) return null;
+    let message = "🛒 *Pedido La Bodega Exprés*%0A";
+    items.forEach(item => {
+      message += `- ${item.nombre} x${item.cantidad} – $${(item.precio * item.cantidad).toFixed(2)}%0A`;
+    });
+    const total = items.reduce((sum, i) => sum + (i.precio * i.cantidad), 0);
+    message += `%0A*Total: $${total.toFixed(2)}*`;
+    return message;
+  }
+
+  // Evento WhatsApp
+  function sendWhatsAppOrder() {
+    const msg = generateWhatsAppMessage();
+    if (!msg) {
+      alert("Agrega productos al carrito antes de enviar.");
+      return;
+    }
+    const phone = "5354148659";
+    const url = `https://wa.me/${phone}?text=${msg}`;
+    window.open(url, "_blank");
+  }
+
+  // Renderizado de productos dinámico según categoría (clase todos-mode condicional)
+  function renderProductsGrid() {
+    let filtered = productos;
+    if (currentCategory !== "todos") {
+      filtered = productos.filter(p => p.categoria === currentCategory);
+    }
+
+    const isTodosMode = (currentCategory === "todos");
+    // aplicar clase especial en el grid
+    if (isTodosMode) {
+      productsGrid.classList.add("todos-mode");
+    } else {
+      productsGrid.classList.remove("todos-mode");
+    }
+
+    productsGrid.innerHTML = filtered.map(product => {
+      const cartItem = cart[product.id];
+      const badge = cartItem ? ` (${cartItem.cantidad})` : "";
+      return `
+        <div class="product-card">
+          <img class="product-img" src="${product.imagen}" alt="${product.nombre}" loading="lazy">
+          <div class="product-info">
+            <div class="product-name">${escapeHtml(product.nombre)}</div>
+            <div class="product-price">$${product.precio.toFixed(2)}</div>
+            <button class="add-btn" data-id="${product.id}">Agregar${badge}</button>
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    // Asignar eventos a botones agregar
+    document.querySelectorAll(".add-btn").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        const id = parseInt(btn.dataset.id);
+        const productFound = productos.find(p => p.id === id);
+        if (productFound) addToCart(productFound);
+      });
+    });
+  }
+
+  // helper sanitizar
+  function escapeHtml(str) {
+    return str.replace(/[&<>]/g, function(m) {
+      if (m === '&') return '&amp;';
+      if (m === '<') return '&lt;';
+      if (m === '>') return '&gt;';
+      return m;
+    });
+  }
+
+  // Eventos de categoría
+  function setupCategories() {
+    const btns = document.querySelectorAll(".cat-btn");
+    btns.forEach(btn => {
+      btn.addEventListener("click", () => {
+        const cat = btn.dataset.category;
+        currentCategory = cat;
+        btns.forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        renderProductsGrid();
+      });
+    });
+  }
+
+  // Control carrito sidebar
+  function openCart() {
+    cartOverlay.classList.add("open");
+    cartSidebar.classList.add("open");
+  }
+  function closeCart() {
+    cartOverlay.classList.remove("open");
+    cartSidebar.classList.remove("open");
+  }
+
+  // Event listeners
+  cartIcon.addEventListener("click", openCart);
+  closeCartBtn.addEventListener("click", closeCart);
+  cartOverlay.addEventListener("click", (e) => {
+    if (e.target === cartOverlay) closeCart();
+  });
+  whatsappBtn.addEventListener("click", sendWhatsAppOrder);
+
+  // Inicialización
+  loadCartFromLocal();
+  setupCategories();
+  renderProductsGrid();
+</script>
+</body>
+</html>
